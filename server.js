@@ -1,24 +1,65 @@
+// const express = require('express');
+// const mongoose = require('mongoose');
+// const cors = require('cors');
+// const dotenv = require('dotenv');
+// const postRoutes = require('./routes/post'); // ✅ Ensure correct path and export
+
+// dotenv.config();
+
+// const app = express();
+
+// app.use(cors());
+// app.use(express.json());
+
+// app.use('/api/posts', postRoutes); // ✅ Router must be a function
+
+// mongoose.connect(process.env.MONGO_URI)
+//   .then(() => console.log('MongoDB connected'))
+//   .catch((err) => console.error(err));
+
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+const dotenv = require('dotenv');
 
+// Load environment variables
+dotenv.config();
+
+// Import Routes
+const postRoutes = require('./routes/post');
+const authRoutes = require('./routes/auth'); 
 
 const app = express();
-app.use(cors({
-    origin: 'https://localhost:3000',
-    credentials: true
-}));
-app.use(express.json());
 
-//routes
+// Middleware
+app.use(cors());
+app.use(express.json()); // Parse incoming JSON
+app.use('/uploads', express.static(Path2D.join(__dirname, 'uploads')));
 
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/posts', require('./routes/posts'));
-app.use('/api/comments', require('./routes/comments'));
 
-//db + server start
+// API Routes
+app.use('/api/posts', postRoutes);
+app.use('/api/auth', authRoutes); // ✅ User register/login route
 
-mongoose.connect(process.env.MONGO_URI).then(()=>{
-    app.listen(5000,()=>console.log('server running on port 5000')).catch(err =>console.error(err));
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+  console.log('✅ MongoDB connected');
+  
+  // Start Server Only After DB Connects
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+})
+.catch((err) => {
+  console.error('❌ MongoDB connection error:', err);
 });
